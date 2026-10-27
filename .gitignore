@@ -1,0 +1,12 @@
+.venv/
+ENV/
+env/
+
+.flet/
+favorites.json
+
+.vscode/
+
+**/__pycache__/
+*.py[cod]
+*$py.class

@@ -1,0 +1,7 @@
+[tool.flet.app]
+path = "."
+exclude = [
+    ".venv",
+    "__pycache__",
+    "data"
+]
