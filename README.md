@@ -1,1 +1,5 @@
-"# Ntify" 
+__Ntify__
+
+```
+pip install -r requirements.txt
+```
