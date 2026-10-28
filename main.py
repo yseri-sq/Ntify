@@ -124,18 +124,18 @@ def main(page: ft.Page):
 
 
     async def handle_keyboard(e: ft.KeyboardEvent):
-        key = (e.key or "").lower()
-
-        if key not in ("space", " "):
+        key = (e.key or "").strip().lower()
+        
+        if key not in ("space", ""): 
             return
-
-        # Не перехватываем пробел, если пользователь вводит текст.
-        focused = getattr(page, "focused_control", None)
+            
+        focused = getattr(e.page, "focused_control", None)
+        
         if focused is not None:
             control_type = type(focused).__name__.lower()
             if "textfield" in control_type or "textinput" in control_type:
                 return
-
+                
         await audio_service.toggle_playback()
 
     page.on_keyboard_event = handle_keyboard

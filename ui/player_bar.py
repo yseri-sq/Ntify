@@ -8,7 +8,6 @@ from service.lyrics_service import get_lyrics
 
 
 def create_player_bar(page):
-    # Обложка трека
     cover_image = ft.Container(
         content=ft.Icon(
             ft.Icons.MUSIC_NOTE,
@@ -22,7 +21,6 @@ def create_player_bar(page):
         alignment=ft.Alignment.CENTER,
     )
 
-    # Информация о треке
     title_text = ft.Text(
         "Ничего не воспроизводится",
         color="#FFFFFF",
@@ -89,7 +87,6 @@ def create_player_bar(page):
         expand=True,
     )
 
-    # Громкость
     volume_icon = ft.Icon(
         icon=ft.Icons.VOLUME_UP,
         color="#B3B3B3",
@@ -107,7 +104,6 @@ def create_player_bar(page):
         width=170,
     )
 
-    # Панель текста песни
     lyrics_button = ft.IconButton(
         icon=ft.Icons.LYRICS_SHARP,
         icon_color="#B3B3B3",
@@ -128,6 +124,13 @@ def create_player_bar(page):
         expand=True,
         spacing=12,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    like_button = ft.IconButton(
+        icon=ft.Icons.FAVORITE_BORDER,
+        icon_color="#B3B3B3",
+        tooltip="Добавить в избранное",
+        on_click=lambda e: None,
     )
 
     lyrics_panel = ft.Container(
@@ -203,16 +206,12 @@ def create_player_bar(page):
 
     
     async def scroll_to_lyrics_line(index):
-        try:
-            # Приблизительная высота одной строки вместе с отступом.
-            offset = max(0, index * 44 - 100)
+        offset = max(0, index * 44 - 100)
 
-            await lyrics_column.scroll_to(
-                offset=offset,
-                duration=300,
-            )
-        except Exception as error:
-            print(f"Lyrics auto-scroll error: {error}")
+        await lyrics_column.scroll_to(
+            offset=offset,
+            duration=300,
+        )
 
 
     def update_lyrics_position(position_ms):
@@ -284,17 +283,12 @@ def create_player_bar(page):
         lyrics_column.controls = [lyrics_status]
         page.update()
 
-        try:
-            item = await asyncio.to_thread(
-                get_lyrics,
-                title_text.value,
-                artist_text.value,
-            )
-        except Exception as error:
-            print(f"LRCLIB error: {error}")
-            item = None
+        item = await asyncio.to_thread(
+            get_lyrics,
+            title_text.value,
+            artist_text.value,
+        )
 
-        # За время поиска пользователь мог включить другой трек.
         if current_track != (
             title_text.value,
             artist_text.value,
@@ -359,7 +353,6 @@ def create_player_bar(page):
 
     lyrics_button.on_click = show_lyrics
 
-    # Аудиосервис
     audio_service = AudioService(
         page=page,
         title_text=title_text,
@@ -380,7 +373,6 @@ def create_player_bar(page):
     progress_slider.on_change_end = audio_service.seek
     volume_slider.on_change = audio_service.change_volume
 
-    # Левая часть: обложка и название
     track_info = ft.Row(
         controls=[
             cover_image,
@@ -388,6 +380,7 @@ def create_player_bar(page):
                 controls=[
                     title_text,
                     artist_text,
+                    # like_button,
                 ],
                 spacing=3,
                 alignment=ft.MainAxisAlignment.CENTER,

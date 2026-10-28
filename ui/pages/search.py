@@ -9,7 +9,7 @@ def create_search_page(on_play=None):
     search_field = ft.TextField(
         hint_text="Название песни или исполнитель",
         prefix_icon=ft.Icons.SEARCH,
-        border_radius=24,
+        border=ft.OutlineInputBorder(side=ft.BorderSide(color="#1DB954", width=2)),
         bgcolor="#282828",
         border_color="#282828",
         color="#FFFFFF",

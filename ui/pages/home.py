@@ -1,7 +1,6 @@
 import flet as ft
 
-from ui.track_card import create_track_card
-
+#https://www.youtube.com/watch?v=glEiPXAYE-U&list=RDCLAK5uy_kP2172rQNb3KFXz880xp6M98R_ME5CIKA&index=2
 
 def create_home_page(on_play=None):
 
@@ -19,12 +18,6 @@ def create_home_page(on_play=None):
                 weight=ft.FontWeight.BOLD,
                 color="#FFFFFF",
             ),
-            # ft.Row(
-            #     controls=cards,
-            #     wrap=True,
-            #     spacing=16,
-            #     run_spacing=16,
-            # ),
         ],
         spacing=20,
         scroll=ft.ScrollMode.AUTO,

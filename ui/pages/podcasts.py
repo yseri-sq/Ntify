@@ -17,7 +17,7 @@ def create_podcasts_page(on_play, page=None):
     search_field = ft.TextField(
         hint_text="Найти подкаст...",
         prefix_icon=ft.Icons.SEARCH,
-        border_radius=24,
+        border=ft.OutlineInputBorder(side=ft.BorderSide(color=GREEN, width=2)),
         bgcolor=CARD,
         border_color="transparent",
         expand=True,
@@ -26,7 +26,7 @@ def create_podcasts_page(on_play, page=None):
     rss_field = ft.TextField(
         hint_text="https://example.com/podcast.rss",
         prefix_icon=ft.Icons.LINK,
-        border_radius=12,
+        border=ft.OutlineInputBorder(side=ft.BorderSide(color=GREEN, width=2)),
         bgcolor=CARD,
         border_color="transparent",
         expand=True,
@@ -109,17 +109,14 @@ def create_podcasts_page(on_play, page=None):
                             max_lines=1,
                             overflow=ft.TextOverflow.ELLIPSIS,
                         ),
-                        ft.Button(
-                            "Смотреть выпуски",
+                        ft.IconButton(
                             icon=ft.Icons.PLAY_ARROW,
+                            icon_color=GREEN,
+                            tooltip="Открыть выпуски",
                             on_click=lambda e, item=podcast: page_ref["value"].run_task(
                                 open_podcast, item
                             ),
-                            style=ft.ButtonStyle(
-                                bgcolor=GREEN,
-                                color="#000000",
-                            ),
-                        ),
+                        )
                     ],
                     spacing=8,
                 ),
@@ -240,13 +237,17 @@ def create_podcasts_page(on_play, page=None):
         header = ft.Container(
             content=ft.Row(
                 controls=[
-                    ft.Icon(
-                        ft.Icons.ARROW_BACK,
-                        color="#FFFFFF",
-                    ),
-                    ft.TextButton(
-                        "Назад к каталогу",
+                    ft.IconButton(
+                        icon=ft.Icons.ARROW_BACK,
+                        icon_color=GREEN,
+                        tooltip="Назад к каталогу",
                         on_click=lambda e: show_catalog(),
+                    ),
+                    ft.Text(
+                        "Выпуски",
+                        size=20,
+                        weight=ft.FontWeight.BOLD,
+                        color="#FFFFFF",
                     ),
                 ],
             ),
