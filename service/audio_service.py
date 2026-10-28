@@ -45,6 +45,9 @@ class AudioService:
         self.update_lyrics_position = None
         self.on_track_change = None
 
+        self.queue = []
+        self.queue_index = -1
+
     @staticmethod
     def get_audio_url(video_url):
         options = {
@@ -76,6 +79,15 @@ class AudioService:
     
     async def play_youtube(self, video):
         self.current_video = dict(video)
+
+        for i, v in enumerate(self.queue):
+            if v.get("url") == video.get("url"):
+                self.queue_index = i
+                break
+        else:
+            if not self.queue:
+                self.queue = [dict(video)]
+                self.queue_index = 0
 
         self.position_ms = 0
         self.duration_ms = 0
@@ -142,6 +154,20 @@ class AudioService:
 
 
     
+    def set_queue(self, videos):
+        self.queue = [dict(v) for v in videos]
+        self.queue_index = -1
+
+    async def next_track(self):
+        if not self.queue or self.queue_index + 1 >= len(self.queue):
+            return
+        await self.play_youtube(self.queue[self.queue_index + 1])
+
+    async def previous_track(self):
+        if not self.queue or self.queue_index - 1 < 0:
+            return
+        await self.play_youtube(self.queue[self.queue_index - 1])
+
     async def toggle_playback(self):
         if self.audio is None:
             return

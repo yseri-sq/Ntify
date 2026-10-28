@@ -405,6 +405,8 @@ def create_player_bar(page):
     play_button.on_click = audio_service.toggle_playback
     progress_slider.on_change_end = audio_service.seek
     volume_slider.on_change = audio_service.change_volume
+    previous_button.on_click = lambda e: page.run_task(audio_service.previous_track)
+    next_button.on_click = lambda e: page.run_task(audio_service.next_track)
 
     track_info = ft.Row(
         controls=[

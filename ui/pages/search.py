@@ -27,10 +27,10 @@ def create_search_page(page: ft.Page, on_play=None):
 
     results_grid = ft.GridView(
         expand=True,
-        max_extent=230,
-        child_aspect_ratio=0.62,
-        spacing=14,
-        run_spacing=14,
+        max_extent=180,
+        child_aspect_ratio=0.75,
+        spacing=12,
+        run_spacing=12,
         padding=8,
         controls=[],
     )
@@ -107,15 +107,17 @@ def create_search_page(page: ft.Page, on_play=None):
 
                 card = ft.Container(
                     expand=True,
-                    padding=12,
+                    padding=10,
                     bgcolor="#181818",
-                    border_radius=12,
+                    border_radius=16,
+                    shadow=ft.BoxShadow(blur_radius=12, color="#00000055"),
+                    on_click=play_video,
                     content=ft.Column(
                         expand=True,
                         spacing=8,
                         controls=[
                             ft.Container(
-                                height=130,
+                                height=110,
                                 width=float("inf"),
                                 bgcolor="#282828",
                                 border_radius=8,
@@ -124,7 +126,7 @@ def create_search_page(page: ft.Page, on_play=None):
                                     ft.Image(
                                         src=thumbnail,
                                         width=float("inf"),
-                                        height=130,
+                                        height=110,
                                         fit=ft.BoxFit.COVER,
                                     )
                                     if thumbnail
@@ -162,19 +164,6 @@ def create_search_page(page: ft.Page, on_play=None):
                             ),
 
                             ft.Container(expand=True),
-
-                            ft.FilledButton(
-                                "Слушать",
-                                icon=ft.Icons.PLAY_ARROW,
-                                on_click=play_video,
-                                width=float("inf"),
-                                height=38,
-                                style=ft.ButtonStyle(
-                                    bgcolor="#1DB954",
-                                    color="#121212",
-                                    shape=ft.RoundedRectangleBorder(radius=24),
-                                ),
-                            ),
                         ],
                     ),
                 )

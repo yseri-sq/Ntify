@@ -20,8 +20,13 @@ def main(page: ft.Page):
     sidebar_width = 220
     sidebar_compact = False
 
+    player_bar, audio_service, lyrics_panel = create_player_bar(page)
+
     page_builders = {
-        "Home": create_home_page,
+        "Home": lambda: create_home_page(
+            on_play=audio_service.play_youtube,
+            page=page,
+        ),
         "Search": lambda: create_search_page(
             page=page,
             on_play=audio_service.play_youtube,
@@ -37,7 +42,10 @@ def main(page: ft.Page):
     }
 
     page_content = ft.Container(
-        content=create_home_page(),
+        content=create_home_page(
+            on_play=audio_service.play_youtube,
+            page=page,
+        ),
         expand=True,
         padding=24,
         border_radius=12,
@@ -115,8 +123,6 @@ def main(page: ft.Page):
         on_pan_start=resize_start,
         on_pan_update=resize_sidebar,
     )
-
-    player_bar, audio_service, lyrics_panel = create_player_bar(page)
 
     content = create_layout(
         sidebar,
