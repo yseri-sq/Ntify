@@ -7,6 +7,7 @@ def create_layout(
     page_content,
     player_bar,
     lyrics_panel,
+    title_bar,
 ):
     content_area = ft.Container(
         content=page_content,
@@ -30,6 +31,7 @@ def create_layout(
 
     return ft.Column(
         controls=[
+            title_bar,
             main_row,
             player_bar,
         ],

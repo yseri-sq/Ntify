@@ -7,6 +7,7 @@ from ui.pages.podcasts import create_podcasts_page
 from ui.pages.search import create_search_page
 from ui.player_bar import create_player_bar
 from ui.sidebar import create_sidebar
+from ui.title_bar import create_title_bar
 
 
 def main(page: ft.Page):
@@ -16,6 +17,7 @@ def main(page: ft.Page):
     page.window.min_width = 1250
     page.window.min_height = 750
     page.bgcolor = "#121212"
+    title_bar = create_title_bar(page)
 
     sidebar_width = 220
     sidebar_compact = False
@@ -130,6 +132,7 @@ def main(page: ft.Page):
         page_content,
         player_bar,
         lyrics_panel,
+        title_bar
     )
 
 
