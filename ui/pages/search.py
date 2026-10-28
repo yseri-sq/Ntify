@@ -5,36 +5,63 @@ import flet as ft
 from service.youtube_catalog import search_youtube
 
 
-def create_search_page(on_play=None):
+def create_search_page(page: ft.Page, on_play=None):
+    def on_search_focus(e):
+        page.data = "search_focused"
+
+    def on_search_blur(e):
+        page.data = None
+
     search_field = ft.TextField(
         hint_text="Название песни или исполнитель",
         prefix_icon=ft.Icons.SEARCH,
-        border=ft.OutlineInputBorder(side=ft.BorderSide(color="#1DB954", width=2)),
         bgcolor="#282828",
-        border_color="#282828",
         color="#FFFFFF",
+        border_radius=12,
+        border_color="#404040",
+        focused_border_color="#1DB954",
         expand=True,
+        on_focus=on_search_focus,
+        on_blur=on_search_blur,
     )
 
     results_grid = ft.GridView(
         expand=True,
         max_extent=230,
-        child_aspect_ratio=0.95,
-        spacing=12,
-        run_spacing=12,
+        child_aspect_ratio=0.62,
+        spacing=14,
+        run_spacing=14,
+        padding=8,
         controls=[],
+    )
+
+    status_text = ft.Text(
+        "",
+        size=13,
+        color="#B3B3B3",
     )
 
     async def run_search(e=None):
         query = (search_field.value or "").strip()
+
         results_grid.controls.clear()
-        results_grid.update()
+        status_text.value = ""
 
         if not query:
+            status_text.value = "Введи название песни или исполнителя."
+            page.update()
             return
+
+        status_text.value = "Ищем музыку..."
+        page.update()
 
         try:
             videos = await asyncio.to_thread(search_youtube, query, 20)
+
+            if not videos:
+                status_text.value = "Ничего не найдено."
+                page.update()
+                return
 
             for video in videos:
                 title = video.get("title") or "Без названия"
@@ -44,91 +71,143 @@ def create_search_page(on_play=None):
                 thumbnail = video.get("thumbnail") or ""
                 if video_id:
                     thumbnail = (
-                        f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
+                        f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
                     )
-
-                cover = ft.Image(
-                    src=thumbnail,
-                    width=190,
-                    height=115,
-                    fit=ft.BoxFit.COVER,
-                    border_radius=8,
-                )
 
                 def play_video(e, item=video):
                     if on_play is not None:
                         asyncio.create_task(on_play(item))
 
+                cover = ft.Container(
+                    height=145,
+                    width=float("inf"),
+                    bgcolor="#383838",
+                    border_radius=8,
+                    clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                    content=(
+                        ft.Image(
+                            src=thumbnail,
+                            fit=ft.BoxFit.COVER,
+                            width=float("inf"),
+                            height=145,
+                            error_content=ft.Icon(
+                                ft.Icons.MUSIC_NOTE,
+                                size=42,
+                                color="#B3B3B3",
+                            ),
+                        )
+                        if thumbnail
+                        else ft.Icon(
+                            ft.Icons.MUSIC_NOTE,
+                            size=42,
+                            color="#B3B3B3",
+                        )
+                    ),
+                )
+
                 card = ft.Container(
+                    expand=True,
+                    padding=12,
+                    bgcolor="#181818",
+                    border_radius=12,
                     content=ft.Column(
+                        expand=True,
+                        spacing=8,
                         controls=[
                             ft.Container(
-                                content=cover,
-                                width=190,
-                                height=115,
-                                bgcolor="#383838",
+                                height=130,
+                                width=float("inf"),
+                                bgcolor="#282828",
                                 border_radius=8,
                                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                            ),
-                            ft.Text(
-                                title,
-                                size=13,
-                                weight=ft.FontWeight.BOLD,
-                                color="#FFFFFF",
-                                max_lines=2,
-                                overflow=ft.TextOverflow.ELLIPSIS,
-                            ),
-                            ft.Row(
-                                controls=[
-                                    ft.Text(
-                                        channel,
-                                        size=11,
+                                content=(
+                                    ft.Image(
+                                        src=thumbnail,
+                                        width=float("inf"),
+                                        height=130,
+                                        fit=ft.BoxFit.COVER,
+                                    )
+                                    if thumbnail
+                                    else ft.Icon(
+                                        ft.Icons.MUSIC_NOTE,
+                                        size=42,
                                         color="#B3B3B3",
-                                        max_lines=1,
-                                        overflow=ft.TextOverflow.ELLIPSIS,
-                                        expand=True,
-                                    ),
-                                    ft.IconButton(
-                                        icon=ft.Icons.PLAY_CIRCLE_FILLED,
-                                        icon_color="#1DB954",
-                                        icon_size=32,
-                                        tooltip="Воспроизвести",
-                                        on_click=play_video,
-                                    ),
-                                ],
-                                spacing=4,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                                    )
+                                ),
+                            ),
+
+                            ft.Container(
+                                height=38,
+                                alignment=ft.Alignment.TOP_LEFT,
+                                content=ft.Text(
+                                    title,
+                                    size=13,
+                                    weight=ft.FontWeight.BOLD,
+                                    color="#FFFFFF",
+                                    max_lines=2,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                ),
+                            ),
+
+                            ft.Container(
+                                height=18,
+                                alignment=ft.Alignment.TOP_LEFT,
+                                content=ft.Text(
+                                    channel,
+                                    size=11,
+                                    color="#B3B3B3",
+                                    max_lines=1,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                ),
+                            ),
+
+                            ft.Container(expand=True),
+
+                            ft.FilledButton(
+                                "Слушать",
+                                icon=ft.Icons.PLAY_ARROW,
+                                on_click=play_video,
+                                width=float("inf"),
+                                height=38,
+                                style=ft.ButtonStyle(
+                                    bgcolor="#1DB954",
+                                    color="#121212",
+                                    shape=ft.RoundedRectangleBorder(radius=24),
+                                ),
                             ),
                         ],
-                        spacing=5,
-                        tight=True,
                     ),
-                    padding=10,
-                    bgcolor="#282828",
-                    border_radius=12,
                 )
 
                 results_grid.controls.append(card)
 
-            results_grid.update()
+            status_text.value = f"Найдено треков: {len(videos)}"
+            page.update()
 
         except Exception as error:
+            status_text.value = "Не удалось выполнить поиск."
             print(f"YouTube search error: {error}")
+            page.update()
 
-    search_field.on_submit = lambda e: asyncio.create_task(run_search())
+    async def submit_search(e):
+        await run_search()
+
+    search_field.on_submit = submit_search
 
     search_button = ft.IconButton(
         icon=ft.Icons.SEARCH,
         icon_color="#121212",
         bgcolor="#1DB954",
         tooltip="Найти музыку",
-        on_click=lambda e: asyncio.create_task(run_search()),
+        on_click=submit_search,
     )
 
     return ft.Column(
+        expand=True,
+        spacing=18,
         controls=[
             ft.Text(
-                "Search",
+                "Поиск",
                 size=28,
                 weight=ft.FontWeight.BOLD,
                 color="#FFFFFF",
@@ -137,8 +216,7 @@ def create_search_page(on_play=None):
                 controls=[search_field, search_button],
                 spacing=10,
             ),
+            status_text,
             results_grid,
         ],
-        spacing=16,
-        expand=True,
     )

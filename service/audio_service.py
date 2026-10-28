@@ -1,4 +1,3 @@
-
 import asyncio
 
 import flet as ft
@@ -44,6 +43,7 @@ class AudioService:
         self.volume = 0.8
         self.seeking = False
         self.update_lyrics_position = None
+        self.on_track_change = None
 
     @staticmethod
     def get_audio_url(video_url):
@@ -75,10 +75,18 @@ class AudioService:
 
     
     async def play_youtube(self, video):
-        self.current_video = video
+        self.current_video = dict(video)
 
+        self.position_ms = 0
+        self.duration_ms = 0
+        self.progress_slider.max = 1
+        self.progress_slider.value = 0
+        self.current_time_text.value = "0:00"
+        self.duration_text.value = "0:00"
         self.title_text.value = video.get("title", "Без названия")
         self.artist_text.value = video.get("channel", "YouTube")
+        if self.on_track_change is not None:
+            self.on_track_change(self.current_video)
         self.status_text.value = "Загрузка аудио..."
         self.page.update()
 
@@ -118,8 +126,6 @@ class AudioService:
 
             self.page.services.append(self.audio)
 
-            # Запускаем воспроизведение явно, а не полагаемся
-            # только на autoplay.
             await self.audio.play()
 
             self.is_playing = True
@@ -136,7 +142,7 @@ class AudioService:
 
 
     
-    async def toggle_playback(self, e=None):
+    async def toggle_playback(self):
         if self.audio is None:
             return
 
@@ -150,20 +156,16 @@ class AudioService:
                 self.is_playing = True
                 self.status_text.value = "Воспроизведение"
 
+            self.update_play_button()
+            self.page.update()
+
         except Exception as error:
-            print(f"Playback control error: {error}")
-            self.status_text.value = "Ошибка управления плеером"
+            print(f"Toggle playback error: {error}")
 
-        self.update_play_button()
-        self.page.update()
-
-
-    
     
     async def on_position_change(self, e):
         position = int(e.position)
 
-        # В конце трека позиция иногда немного превышает длительность.
         if self.duration_ms > 0:
             position = min(position, self.duration_ms)
 
@@ -186,8 +188,6 @@ class AudioService:
         self.page.update()
 
 
-
-    
     async def on_duration_change(self, e):
         duration = getattr(e, "duration", None)
 
@@ -199,7 +199,6 @@ class AudioService:
 
         self.progress_slider.max = max(1, self.duration_ms)
 
-        # Значение не должно выходить за границы слайдера.
         self.position_ms = min(
             self.position_ms,
             self.duration_ms,
@@ -267,9 +266,10 @@ class AudioService:
             "channel": episode.get("author", "Подкасты"),
             "url": episode["url"],
         }
-
         self.title_text.value = episode.get("title", "Подкаст")
         self.artist_text.value = episode.get("author", "Подкасты")
+        if self.on_track_change is not None:
+            self.on_track_change(self.current_video)
         self.status_text.value = "Загрузка выпуска..."
         self.position_ms = 0
         self.duration_ms = 0
@@ -322,4 +322,3 @@ class AudioService:
             print(f"Podcast playback error: {error}")
 
         self.page.update()
-

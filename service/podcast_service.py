@@ -1,15 +1,9 @@
-
 import json
 import os
-import re
 import xml.etree.ElementTree as ET
-
-from datetime import datetime
 from email.utils import parsedate_to_datetime
-from urllib.parse import urlencode
 
 import requests
-
 
 CATALOG_URL = "https://itunes.apple.com/search"
 LOOKUP_URL = "https://itunes.apple.com/lookup"
@@ -30,7 +24,6 @@ def _ensure_data_dir():
 
 
 def search_podcasts(query):
-    """Ищет подкасты в публичном каталоге Apple Podcasts."""
     query = query.strip()
 
     if not query:
@@ -67,7 +60,6 @@ def search_podcasts(query):
 
 
 def _local_name(tag):
-    """Убирает XML namespace из имени тега."""
     return tag.rsplit("}", 1)[-1].lower()
 
 
@@ -104,7 +96,6 @@ def _format_duration(value):
 
     value = str(value).strip()
 
-    # RSS может указывать длительность в секундах.
     if value.isdigit():
         total_seconds = int(value)
         hours = total_seconds // 3600
@@ -120,7 +111,6 @@ def _format_duration(value):
 
 
 def parse_rss_feed(feed_url):
-    """Загружает сведения о подкасте и его выпусках из RSS."""
     response = requests.get(
         feed_url,
         headers=HEADERS,
@@ -150,7 +140,6 @@ def parse_rss_feed(feed_url):
     description = _child_text(channel, "description")
     image = _child_attribute(channel, "image", "href")
 
-    # В классическом RSS обложка обычно находится внутри <image><url>.
     if not image:
         for element in channel.iter():
             if _local_name(element.tag) == "image":
@@ -170,7 +159,6 @@ def parse_rss_feed(feed_url):
 
         audio_url = _child_attribute(item, "enclosure", "url")
 
-        # Некоторые RSS-ленты используют media:content.
         if not audio_url:
             audio_url = _child_attribute(item, "content", "url")
 
@@ -241,7 +229,6 @@ def save_feed(feed_url):
     if not feed_url.lower().startswith(("http://", "https://")):
         raise ValueError("Введи корректную HTTP или HTTPS RSS-ссылку.")
 
-    # Проверяем, что это действительно читаемая RSS-лента.
     podcast = parse_rss_feed(feed_url)
 
     feeds = get_saved_feeds()
@@ -280,7 +267,6 @@ def remove_feed(feed_url):
 
 
 def get_podcast_feed_url(podcast_id):
-    """Получает RSS-ссылку из каталога Apple Podcasts."""
     response = requests.get(
         LOOKUP_URL,
         params={"id": podcast_id},

@@ -8,15 +8,23 @@ def create_layout(
     player_bar,
     lyrics_panel,
 ):
+    content_area = ft.Container(
+        content=page_content,
+        expand=1,
+        padding=0,
+    )
+
+    lyrics_panel.expand = None
+
     main_row = ft.Row(
         controls=[
             sidebar,
             resize_handle,
-            page_content,
+            content_area,
             lyrics_panel,
         ],
         expand=True,
-        spacing=10,
+        spacing=8,
         vertical_alignment=ft.CrossAxisAlignment.STRETCH,
     )
 
@@ -26,5 +34,5 @@ def create_layout(
             player_bar,
         ],
         expand=True,
-        spacing=10,
+        spacing=8,
     )

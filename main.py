@@ -1,20 +1,20 @@
 import flet as ft
 
 from ui.layout import create_layout
-from ui.player_bar import create_player_bar
-from ui.sidebar import create_sidebar
 from ui.pages.home import create_home_page
-from ui.pages.search import create_search_page
 from ui.pages.liked import create_liked_page
 from ui.pages.podcasts import create_podcasts_page
+from ui.pages.search import create_search_page
+from ui.player_bar import create_player_bar
+from ui.sidebar import create_sidebar
 
 
 def main(page: ft.Page):
     page.title = "Ntify"
-    page.window.width = 1220
-    page.window.height = 800
-    page.window.min_width = 1050
-    page.window.min_height = 650
+    page.window.width = 1520
+    page.window.height = 870
+    page.window.min_width = 1250
+    page.window.min_height = 750
     page.bgcolor = "#121212"
 
     sidebar_width = 220
@@ -23,9 +23,13 @@ def main(page: ft.Page):
     page_builders = {
         "Home": create_home_page,
         "Search": lambda: create_search_page(
-            on_play=audio_service.play_youtube
-            ),
-        "Like": create_liked_page,
+            page=page,
+            on_play=audio_service.play_youtube,
+        ),
+        "Like": lambda: create_liked_page(
+            on_play=audio_service.play_youtube,
+            page=page,
+        ),
         "Podcasts": lambda: create_podcasts_page(
             on_play=audio_service.play_podcast_episode,
             page=page,
@@ -125,18 +129,21 @@ def main(page: ft.Page):
 
     async def handle_keyboard(e: ft.KeyboardEvent):
         key = (e.key or "").strip().lower()
-        
-        if key not in ("space", ""): 
+
+        if key not in ("space", "spacebar", ""):
             return
-            
-        focused = getattr(e.page, "focused_control", None)
-        
-        if focused is not None:
-            control_type = type(focused).__name__.lower()
-            if "textfield" in control_type or "textinput" in control_type:
-                return
-                
+
+        if not (e.key or "").isspace() and key == "":
+            return
+
+        if getattr(page, "data", None) == "search_focused":
+            return
+
+        if audio_service.audio is None:
+            return
+
         await audio_service.toggle_playback()
+
 
     page.on_keyboard_event = handle_keyboard
 

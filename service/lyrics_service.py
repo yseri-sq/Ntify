@@ -21,12 +21,10 @@ def get_lyrics(title, artist):
         if not results:
             return None
 
-        # Сначала выбираем результат с синхронизированным текстом.
         for item in results:
             if item.get("syncedLyrics"):
                 return item
 
-        # Если синхронизированного текста нет — обычный текст.
         for item in results:
             if item.get("plainLyrics"):
                 return item

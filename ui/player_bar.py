@@ -4,21 +4,19 @@ import re
 import flet as ft
 
 from service.audio_service import AudioService
+from service.favorites_service import is_favorite, toggle_favorite
 from service.lyrics_service import get_lyrics
 
 
 def create_player_bar(page):
     cover_image = ft.Container(
-        content=ft.Icon(
-            ft.Icons.MUSIC_NOTE,
-            size=30,
-            color="#1DB954",
-        ),
+        content=ft.Icon(ft.Icons.MUSIC_NOTE, size=30, color="#1DB954"),
         width=58,
         height=58,
         bgcolor="#282828",
         border_radius=8,
         alignment=ft.Alignment.CENTER,
+        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
     )
 
     title_text = ft.Text(
@@ -43,7 +41,6 @@ def create_player_bar(page):
         size=10,
     )
 
-    # Управление воспроизведением
     play_button = ft.IconButton(
         icon=ft.Icons.PLAY_ARROW,
         icon_color="#FFFFFF",
@@ -130,7 +127,7 @@ def create_player_bar(page):
         icon=ft.Icons.FAVORITE_BORDER,
         icon_color="#B3B3B3",
         tooltip="Добавить в избранное",
-        on_click=lambda e: None,
+        visible=False
     )
 
     lyrics_panel = ft.Container(
@@ -177,6 +174,7 @@ def create_player_bar(page):
         "active_index": -1,
         "synced": False,
         "loaded_for": None,
+        "request_id": 0,
     }
 
     def parse_lrc(text):
@@ -255,101 +253,135 @@ def create_player_bar(page):
         if lyrics_panel.visible:
             page.update()
 
-    async def show_lyrics(e=None):
+    async def load_lyrics_for_current_track(force=False):
+        current_track = (title_text.value, artist_text.value)
         if not lyrics_panel.visible:
-            lyrics_panel.visible = True
-            page.update()
-        else:
-            lyrics_panel.visible = False
-            page.update()
+            return
+        if current_track == lyrics_data["loaded_for"] and not force:
             return
 
-        current_track = (
-            title_text.value,
-            artist_text.value,
-        )
-
-        if current_track == lyrics_data["loaded_for"]:
-            page.update()
-            return
-
+        lyrics_data["request_id"] += 1
+        request_id = lyrics_data["request_id"]
         lyrics_data["loaded_for"] = current_track
         lyrics_data["lines"] = []
         lyrics_data["controls"] = []
         lyrics_data["active_index"] = -1
         lyrics_data["synced"] = False
-
         lyrics_status.value = "Ищем текст песни в LRCLIB..."
         lyrics_column.controls = [lyrics_status]
         page.update()
 
-        item = await asyncio.to_thread(
-            get_lyrics,
-            title_text.value,
-            artist_text.value,
-        )
+        current_video = getattr(audio_service, "current_video", None)
+        if not current_video or not current_video.get("url", "").startswith("https://www.youtube.com/"):
+            lyrics_status.value = "Текст доступен только для музыкальных треков."
+            page.update()
+            return
 
-        if current_track != (
-            title_text.value,
-            artist_text.value,
-        ):
-            lyrics_data["loaded_for"] = None
+        item = await asyncio.to_thread(get_lyrics, current_track[0], current_track[1])
+        if request_id != lyrics_data["request_id"]:
+            return
+        if current_track != (title_text.value, artist_text.value) or not lyrics_panel.visible:
             return
 
         lyrics_column.controls.clear()
-
         if not item:
-            lyrics_column.controls.append(
-                ft.Text(
-                    "Текст не найден.",
-                    color="#B3B3B3",
-                    size=16,
-                    text_align=ft.TextAlign.CENTER,
-                )
-            )
+            lyrics_column.controls.append(ft.Text("Текст не найден.", color="#B3B3B3", size=16, text_align=ft.TextAlign.CENTER))
             page.update()
             return
 
         synced_text = item.get("syncedLyrics") or ""
         plain_text = item.get("plainLyrics") or ""
-
         if synced_text:
             lyrics_data["lines"] = parse_lrc(synced_text)
             lyrics_data["synced"] = bool(lyrics_data["lines"])
-
         if not lyrics_data["lines"] and plain_text:
-            lyrics_data["lines"] = [
-                (0, line)
-                for line in plain_text.splitlines()
-            ]
+            lyrics_data["lines"] = [(0, line) for line in plain_text.splitlines()]
             lyrics_data["synced"] = False
 
         if not lyrics_data["lines"]:
-            lyrics_column.controls.append(
-                ft.Text(
-                    "У этой песни нет доступного текста.",
-                    color="#B3B3B3",
-                    size=16,
-                )
-            )
+            lyrics_column.controls.append(ft.Text("У этой песни нет доступного текста.", color="#B3B3B3", size=16))
             page.update()
             return
 
         for _, lyric_line in lyrics_data["lines"]:
-            lyric_control = ft.Text(
-                lyric_line or "♪",
-                color="#B3B3B3",
-                size=18,
-                text_align=ft.TextAlign.CENTER,
-            )
-
+            lyric_control = ft.Text(lyric_line or "♪", color="#B3B3B3", size=18, text_align=ft.TextAlign.CENTER)
             lyrics_data["controls"].append(lyric_control)
             lyrics_column.controls.append(lyric_control)
 
         if lyrics_data["synced"]:
             update_lyrics_position(audio_service.position_ms)
+        page.update()
+
+    async def show_lyrics(e=None):
+        lyrics_panel.visible = not lyrics_panel.visible
+        lyrics_button.icon_color = "#1DB954" if lyrics_panel.visible else "#B3B3B3"
+        page.update()
+        if lyrics_panel.visible:
+            await load_lyrics_for_current_track(force=True)
+
+    def on_track_changed(track):
+        image_url = (
+            track.get("thumbnail")
+            or track.get("cover_url")
+            or track.get("image")
+            or ""
+        )
+        if image_url:
+            cover_image.content = ft.Image(
+                src=image_url,
+                width=58,
+                height=58,
+                fit=ft.BoxFit.COVER,
+                border_radius=8,
+            )
+        else:
+            cover_image.content = ft.Icon(
+                ft.Icons.MUSIC_NOTE,
+                size=30,
+                color="#1DB954",
+            )
+
+        lyrics_data["request_id"] += 1
+        lyrics_data["loaded_for"] = None
+        lyrics_data["lines"] = []
+        lyrics_data["controls"] = []
+        lyrics_data["active_index"] = -1
+        lyrics_data["synced"] = False
+        lyrics_column.controls = [lyrics_status]
+        lyrics_status.value = "Обновляем текст песни..." if lyrics_panel.visible else "Включи песню и нажми кнопку текста"
+
+        track_id = str(track.get("id") or track.get("url") or "")
+
+        like_button.visible = bool(track_id)
+
+        liked = bool(track_id and is_favorite(track_id))
+        like_button.icon = (
+            ft.Icons.FAVORITE if liked
+            else ft.Icons.FAVORITE_BORDER
+        )
+        like_button.icon_color = "#1DB954" if liked else "#B3B3B3"
+        like_button.tooltip = (
+            "Убрать из избранного" if liked
+            else "Добавить в избранное"
+        )
 
         page.update()
+        if lyrics_panel.visible:
+            page.run_task(load_lyrics_for_current_track, True)
+
+    def toggle_current_favorite(e=None):
+        track = getattr(audio_service, "current_video", None)
+        if not track:
+            status_text.value = "Сначала включи трек"
+            page.update()
+            return
+        liked, _ = toggle_favorite(track)
+        like_button.icon = ft.Icons.FAVORITE if liked else ft.Icons.FAVORITE_BORDER
+        like_button.icon_color = "#1DB954" if liked else "#B3B3B3"
+        like_button.tooltip = "Убрать из избранного" if liked else "Добавить в избранное"
+        page.update()
+
+    like_button.on_click = toggle_current_favorite
 
     lyrics_button.on_click = show_lyrics
 
@@ -368,6 +400,7 @@ def create_player_bar(page):
     )
 
     audio_service.update_lyrics_position = update_lyrics_position
+    audio_service.on_track_change = on_track_changed
 
     play_button.on_click = audio_service.toggle_playback
     progress_slider.on_change_end = audio_service.seek
@@ -380,7 +413,7 @@ def create_player_bar(page):
                 controls=[
                     title_text,
                     artist_text,
-                    # like_button,
+                    like_button,
                 ],
                 spacing=3,
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -391,7 +424,6 @@ def create_player_bar(page):
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
-    # Центральная часть: кнопки и прогресс
     playback_controls = ft.Row(
         controls=[
             previous_button,
@@ -435,9 +467,7 @@ def create_player_bar(page):
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
-    # Панель текста находится над нижним плеером.
-    
-    
+     
     player_bar = ft.Container(
         content=ft.Row(
             controls=[
