@@ -15,13 +15,15 @@ MUTED = "#B3B3B3"
 def create_podcasts_page(on_play, page=None):
     page_ref = {"value": page}
     search_field = ft.TextField(
-        hint_text="Найти подкаст...",
-        prefix_icon=ft.Icons.SEARCH,
-        border=ft.OutlineInputBorder(side=ft.BorderSide(color=GREEN, width=2)),
-        bgcolor=CARD,
-        border_color="transparent",
-        expand=True,
-    )
+            hint_text="Название песни или исполнитель",
+            prefix_icon=ft.Icons.SEARCH,
+            bgcolor="#282828",
+            color="#FFFFFF",
+            border_radius=12,
+            border_color="#404040",
+            focused_border_color="#1DB954",
+            expand=True,
+        )
 
     rss_field = ft.TextField(
         hint_text="https://example.com/podcast.rss",
@@ -86,6 +88,10 @@ def create_podcasts_page(on_play, page=None):
         return ft.Container(
             col={"sm": 6, "md": 4, "lg": 3, "xl": 3},
             content=ft.Container(
+                on_click=lambda e, item=podcast: page_ref["value"].run_task(
+                                                open_podcast, item
+                                            ),
+                ink=True,
                 height=285,
                 content=ft.Column(
                     controls=[
@@ -105,14 +111,6 @@ def create_podcasts_page(on_play, page=None):
                             overflow=ft.TextOverflow.ELLIPSIS,
                         ),
                         ft.Container(expand=True),
-                        ft.FilledButton(
-                            content="Выпуски",
-                            icon=ft.Icons.PLAY_ARROW,
-                            on_click=lambda e, item=podcast: page_ref["value"].run_task(
-                                open_podcast, item
-                            ),
-                            width=float("inf"),
-                        )
                     ],
                     spacing=8,
                     expand=True,

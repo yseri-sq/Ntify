@@ -44,7 +44,7 @@ def create_title_bar(page: ft.Page):
                     expand=True,
                 ),
                 window_button(
-                    ft.Icons.MINIMIZE,
+                    ft.Icons.REMOVE,
                     "Свернуть",
                     minimize,
                 ),

@@ -112,6 +112,7 @@ def create_search_page(page: ft.Page, on_play=None):
                     border_radius=16,
                     shadow=ft.BoxShadow(blur_radius=12, color="#00000055"),
                     on_click=play_video,
+                    ink=True,
                     content=ft.Column(
                         expand=True,
                         spacing=8,

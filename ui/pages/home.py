@@ -6,9 +6,9 @@ import flet as ft
 from service.youtube_catalog import get_playlist
 
 PLAYLISTS = [
-    ("https://www.youtube.com/playlist?list=RDCLAK5uy_kP2172rQNb3KFXz880xp6M98R_ME5CIKA", "Плейлист 1", "https://i.ytimg.com/vi/glEiPXAYE-U/hqdefault.jpg"),
-    ("https://www.youtube.com/playlist?list=RDCLAK5uy_kWiJXUNLZM9EyS3GBGznl1ku8_cOos97U", "Плейлист 2", "https://i.ytimg.com/vi/BX0lKSa_PTk/hqdefault.jpg"),
-    ("https://www.youtube.com/playlist?list=RDCLAK5uy_nVT2-bFfxplES7OQSLcnwlJqpsQ9gn0yY", "Плейлист 3", "https://i.ytimg.com/vi/mTduyC2zPXg/hqdefault.jpg"),
+    ("https://www.youtube.com/playlist?list=RDCLAK5uy_kP2172rQNb3KFXz880xp6M98R_ME5CIKA", "Гэнгбегь mix", "https://i.ytimg.com/vi/glEiPXAYE-U/hqdefault.jpg"),
+    ("https://www.youtube.com/playlist?list=RDCLAK5uy_kWiJXUNLZM9EyS3GBGznl1ku8_cOos97U", "Эпилеплиск mode:?", "https://i.ytimg.com/vi/BX0lKSa_PTk/hqdefault.jpg"),
+    ("https://www.youtube.com/playlist?list=RDCLAK5uy_nVT2-bFfxplES7OQSLcnwlJqpsQ9gn0yY", "deadinside mode: tolstiy huesos!@!", "https://i.ytimg.com/vi/mTduyC2zPXg/hqdefault.jpg"),
 ]
 
 
